@@ -2,31 +2,30 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DAL.App.EF;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Domain;
-using WebApp.Data;
 using DAL.App.EF.Repositories;
+using DAL.App.Interfaces;
 using DAL.App.Interfaces.Repositories;
 
 namespace WebApp.Controllers
 {
     public class PeopleController : Controller
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IPersonRepository _personRepo;
+        private readonly IAppUnitOfWork _uow;
 
-        public PeopleController(ApplicationDbContext context)
+        public PeopleController(IAppUnitOfWork uow)
         {
-            _context = context;
-            _personRepo = new EFPersonRepository(_context);
+            _uow = uow;
         }
 
         // GET: People
         public async Task<IActionResult> Index()
         {
-            return View(await _personRepo.AllAsync());
+            return View(await _uow.People.AllAsync());
         }
 
         // GET: People/Details/5
@@ -37,7 +36,7 @@ namespace WebApp.Controllers
                 return NotFound();
             }
 
-            var person = await _personRepo.FindAsync(id);
+            var person = await _uow.People.FindAsync(id);
             if (person == null)
             {
                 return NotFound();
@@ -61,8 +60,8 @@ namespace WebApp.Controllers
         {
             if (ModelState.IsValid)
             {
-                _context.Add(person);
-                await _context.SaveChangesAsync();
+                await _uow.People.AddAsync(person);
+                await _uow.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
             return View(person);
@@ -76,7 +75,7 @@ namespace WebApp.Controllers
                 return NotFound();
             }
 
-            var person = await _personRepo.FindAsync(id);
+            var person = await _uow.People.FindAsync(id);
             if (person == null)
             {
                 return NotFound();
@@ -100,11 +99,15 @@ namespace WebApp.Controllers
             {
                 try
                 {
-                    _context.Update(person);
-                    await _context.SaveChangesAsync();
+                    _uow.People.Update(person);
+                    await _uow.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
+                    if (!_uow.People.Exists(person.PersonId))
+                    {
+                        return NotFound();
+                    }
                 }
                 return RedirectToAction(nameof(Index));
             }
@@ -119,7 +122,7 @@ namespace WebApp.Controllers
                 return NotFound();
             }
 
-            var person = await _personRepo.FindAsync(id);
+            var person = await _uow.People.FindAsync(id);
 
             if (person == null)
             {
@@ -134,9 +137,9 @@ namespace WebApp.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var person = await _personRepo.FindAsync(id);
-            _personRepo.Remove(person);
-            await _context.SaveChangesAsync();
+            var person = await _uow.People.FindAsync(id);
+            _uow.People.Remove(person);
+            await _uow.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
     }

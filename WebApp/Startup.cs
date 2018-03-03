@@ -2,17 +2,20 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DAL.App.EF;
+using Domain;
+using DAL.App.EF.Repositories;
+using DAL.App.Interfaces;
+using DAL.App.Interfaces.Repositories;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using WebApp.Data;
 using WebApp.Models;
 using WebApp.Services;
-using DAL.App.EF.Repositories;
-using DAL.App.Interfaces.Repositories;
+
 
 namespace WebApp
 {
@@ -38,8 +41,11 @@ namespace WebApp
             // Add application services.
             services.AddTransient<IEmailSender, EmailSender>();
 
-            // Add repos to DI container
-            services.AddScoped<IPersonRepository, EFPersonRepository>();
+            // Add uow to DI container
+            // scoped - object lives for duration of web request
+            // transient - created new on every new object creation
+            // singleton - created once, lives forever
+            services.AddScoped<IAppUnitOfWork, AppEFUnitOfWork>();
 
             services.AddMvc();
         }
@@ -71,3 +77,4 @@ namespace WebApp
         }
     }
 }
+

@@ -5,9 +5,8 @@ using System.Threading.Tasks;
 using Domain;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using WebApp.Models;
 
-namespace WebApp.Data
+namespace DAL.App.EF
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
